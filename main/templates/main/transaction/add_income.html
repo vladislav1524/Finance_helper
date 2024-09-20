@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавление расходов{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Добавление доходов</h1>
+    <form action="{% url 'app:income_add' %}" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+        <input type="submit" class="btn btn-primary" value="добавить расход">
+    </form>
+</div>
+{% endblock %}

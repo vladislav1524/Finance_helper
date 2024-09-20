@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавление новой цели{% endblock %}
+
+{% block content %}
+  <div class="container my-5">
+    <h1 class="mb-4">Новая цель накопления:</h1>
+    <form action="{% url 'app:goal_add' %}" method="post" class="form-group">
+      {% csrf_token %}
+      <div class="mb-3">
+      {{ form.as_p }}
+        </div>
+      <button type="submit" class="btn btn-primary">добавить цель</button>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+    <h1>Вход</h1>
+    <p>Вы можете войти через аккаунты в соц сетях:</p>
+    <ul class="list-unstyled">
+        <li class="mb-2">
+            <a class="btn btn-primary" style="width: 200px;" href="{% url 'social:begin' 'vk-oauth2' %}">
+                <i class="fa-brands fa-vk"></i> Войти с VK
+            </a>
+        </li>
+        <li class="mb-2">
+            <a class="btn btn-danger" style="width: 200px;" href="{% url 'social:begin' 'google-oauth2' %}">
+                <i class="fa-brands fa-google"></i> Войти с Google
+            </a>
+        </li>
+        <li class="mb-2">
+            <a class="btn btn-info" style="width: 200px;" href="{% url 'social:begin' 'discord' %}">
+                <i class="fa-brands fa-discord"></i> Войти с Discord
+            </a>
+        </li>
+    </ul>
+    
+    
+    <h4 class="text-center">или через почту</h4>
+    <p>Введите ваш email адрес:</p>
+    <form method="post" action="{% url 'first_page_login' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Войти</button>
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Ошибка:</strong> {{ form.errors.email|join:", " }}
+            </div>
+        {% endif %}
+    </form> <br>
+    <p><a href="{% url 'register' %}">Ещё не зарегистрированы?</a></p>
+{% endblock %}

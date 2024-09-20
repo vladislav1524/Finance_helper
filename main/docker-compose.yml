@@ -1,0 +1,69 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+    volumes:
+      - .:/app
+    environment:
+      RUN_ENV: "docker"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    
+  celery:
+    build: .
+    command: sh -c "sleep 5 && celery -A  main worker --loglevel=info --uid=nobody --gid=nogroup"
+    environment:
+      CELERY_BROKER_URL: amqp://user:9045@rabbitmq:5672/
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  flower:
+    build: .
+    command: sh -c "sleep 5 && flower -A your_project --port=5555"
+    volumes:
+      - .:/app
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: amqp://user:9045@rabbitmq:5672/
+    depends_on:
+      - celery
+      - redis
+      
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: 9045
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: finance_db   
+      POSTGRES_USER: finence_user    
+      POSTGRES_PASSWORD: 90459045 
+    volumes:
+      - pg_data:/var/lib/postgresql/data 
+
+volumes:
+  pg_data:
+  redis_data:
+
+
+networks:
+  default:
+    driver: bridge

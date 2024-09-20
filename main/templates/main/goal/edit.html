@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование цели{% endblock %}
+
+{% block content %}
+  <div class="container my-5">
+    <h1 class="mb-4">Редактирование цели:</h1>
+    <form action="{% url 'app:goal_edit' goal.id %}" method="post" class="form-group">
+      {% csrf_token %}
+      {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">изменить</button>
+        <a href="{% url 'app:index' %}" class="btn btn-secondary">отмена</a>
+    </form>
+  </div>
+{% endblock %}

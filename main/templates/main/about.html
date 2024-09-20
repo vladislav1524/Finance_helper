@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}О нас{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center ">О нас</h1>
+        <p class="lead text-center">Это сайт для помощи в финансовом учёте, который поможет вам визуализировать ваши доходы и расходы, поставить цель для накопления.</p>
+        <p class="text-center">Также на сайте вы сможете получить совет от нейросети на основе ваших трат, доходов и целей.</p>
+        
+        <h2 class="mt-4">Наши контакты:</h2>
+        <ul class="list-unstyled">
+            <li class="list-group-item">
+                <strong><i class="fa fa-paper-plane" aria-hidden="true"></i> Telegram:</strong> 
+                <a class="btn-outline-success" href="https://t.me/yasno1508">@yasno1508</a>
+            </li>
+            <li class="list-group-item"> 
+                <strong><i class="fa-brands fa-github"></i> GitHub:</strong> 
+                <a class="btn-outline-success" href="https://github.com/vladislav1524">@vladislav1524</a>
+            </li>
+            <li class="list-group-item">
+                <strong><i class="fa fa-envelope" aria-hidden="true"></i> Email:</strong> 
+                <a class="btn-outline-success" href="mailto:tetfef14@gmail.com">tetfef14@gmail.com</a>
+            </li>
+        </ul>
+
+        <h2 class="mt-4">Технологии, использованные в проекте:</h2>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <strong>Redis:</strong> кэширование элементов страницы для сокращения запросов к базе данных и к API курсов валют.
+            </li>
+            <li class="list-group-item">
+                <strong>Celery, RabbitMQ:</strong> асинхронная отправка писем на почту для восстановления пароля.
+            </li>
+            <li class="list-group-item">
+                <strong>DRF:</strong> API для получения информации о пользователях сайта из внешних приложений.
+            </li>
+            <li class="list-group-item">
+                <strong>PostgreSQL:</strong> база данных.
+            </li>
+            <li class="list-group-item"> 
+                <strong>Чужой API:</strong> получение курсов валют.
+            </li>
+            <li class="list-group-item">
+                <strong>Django-allauth и social-django:</strong> аутентификация пользователей через сайт или соцсети.
+            </li>
+            <li class="list-group-item">
+                <strong>Docker:</strong> контейнеризация.
+            </li>
+        </ul>
+        
+        <div class="text-center mt-5">
+            <a href="/" class="btn btn-primary">Вернуться на главную</a>
+        </div>
+    </div>
+{% endblock %}

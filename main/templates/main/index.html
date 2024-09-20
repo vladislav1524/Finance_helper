@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Ваш Финансовый помощник</h1>
+    
+    <div class="container mt-5">
+        <h2 class="text-center">Курсы валют</h2>
+        <div class="text-center">
+            <small>(обновление раз в 24 часа)</small>
+        </div>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-4">
+                <div class="card text-center mb-4">
+                    <div class="card-header">Доллар США</div>
+                    <div class="card-body">
+                        <h5 class="card-title" id="USD">Доллар США $ — {{ usd_rate|floatformat:4 }} руб.</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center mb-4">
+                    <div class="card-header">Евро</div>
+                    <div class="card-body">
+                        <h5 class="card-title" id="EUR">Евро € — {{ eur_rate|floatformat:4 }} руб.</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="goals mb-4">
+        <h4>Ваша текущая цель:</h4>
+        {% if current_goal %}
+        <div class="alert alert-info">
+            <p>{{ current_goal.name }}: {{ current_goal.current_amount|intcomma }}₽ ({{ current_goal.percentage_to_target }}%) из {{ current_goal.target_amount|intcomma }}₽</p>
+            <div class="progress mb-3">
+                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: {{ current_goal.percentage_to_target|floatformat:0 }}%;" aria-valuenow="{{ current_goal.percentage_to_target|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ current_goal.percentage_to_target }}%
+                </div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <form action="{% url 'app:goal_edit' current_goal.id %}" method="get">
+                    <button type="submit" class="btn btn-outline-primary">Изменить название</button>
+                </form>
+                <form action="{% url 'app:goal_delete' current_goal.id %}" method="get">
+                    <button type="submit" class="btn btn-outline-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            {% if goals %}Ваша прошлая цель была выполнена или удалена<br>{% endif %}(сейчас у вас не установлена цель)
+        </div>
+        {% endif %}
+        
+        <form action="{% url 'app:goal_add' %}" method="get">
+            <button type="submit" class="btn btn-outline-success">Добавить новую цель{% if current_goal %} и завершить текущую{% endif %}</button>
+        </form>
+    </div>
+
+    <h4 class="mt-4">Завершённые цели:</h4>
+    <div class="accordion" id="accordionGoals">
+        <div class="card">
+            <div class="card-header" id="headingGoals">
+                <h2 class="mb-0">
+                    <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapseGoals" aria-expanded="true" aria-controls="collapseGoals">
+                        Показать завершённые цели
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseGoals" class="collapse" aria-labelledby="headingGoals" data-parent="#accordionGoals">
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for goal in goals %}
+                        <li class="list-group-item">
+                            {{ goal.name }}: {{ goal.current_amount|intcomma }}₽ ({{ goal.percentage_to_target }}%) из {{ goal.target_amount|intcomma }}₽
+                            <div class="d-flex justify-content-between mt-2">
+                                <form action="{% url 'app:goal_edit' goal.id %}" method="get">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Изменить название</button>
+                                </form>
+                                <form action="{% url 'app:goal_delete' goal.id %}" method="get">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                                </form>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">(пока нет завершённых целей)</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <button class="btn btn-link" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapseGoals" aria-expanded="true" aria-controls="collapseGoals">
+                    <i class="fa fa-sort" aria-hidden="true"></i>  
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-4">Совет нейросети:</h4>
+    {% if ai_text %}
+    <div class="card">
+        <div class="card-body">
+            {{ ai_text|linebreaks|safe }}
+        </div>
+    </div>
+    {% endif %}
+    <form method="post" action="{% url 'app:index' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-success">Получить совет от нейросети (раз в 24 часа)</button>
+    </form>
+
+    <div class="expenses mb-4">
+        <h4>Ваши траты за последние 30 дней:</h4>
+       
+        <div class="col-md-4">  
+            <canvas id="expensesChart" width="40" height="40"></canvas>
+        </div>
+        <script>
+            const categoryData = {{ category_totals|safe }};
+            const labels = Object.keys(categoryData);
+            const data = Object.values(categoryData);
+
+            const ctx = document.getElementById('expensesChart').getContext('2d');
+            const expensesChart = new Chart(ctx, {
+                type: 'pie', 
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Категории трат',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)', 
+                            'rgba(255, 206, 86, 0.6)', 
+                            'rgba(75, 192, 192, 0.6)',   
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',  
+                            'rgba(255, 99, 132, 0.4)',    
+                            'rgba(54, 162, 235, 0.4)',     
+                            'rgba(255, 206, 86, 0.4)',    
+                            'rgba(75, 192, 192, 0.4)',    
+                            'rgba(153, 102, 255, 0.4)',   
+                            'rgba(255, 159, 64, 0.4)'      
+                        ],
+                        borderColor: 'rgba(0, 0, 0, 1)',
+                        borderWidth: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Расходы по категориям'
+                        }
+                    }
+                }
+            });
+        </script>
+         <form action="{% url 'app:expense_add' %}" method="get">
+            <button type="submit" class="btn btn-outline-success">Добавить расход</button>
+        </form>
+        <div class="accordion" id="accordionExpenses">
+            <div class="card">
+                <div class="card-header" id="headingExpenses">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#collapseExpenses" aria-expanded="true" aria-controls="collapseExpenses">
+                            Показать все траты
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseExpenses" class="collapse" aria-labelledby="headingExpenses" data-parent="#accordionExpenses">
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for expense in expenses %}
+                            <li class="list-group-item">
+                                <h6>{{ expense.title }}</h6>
+                                <p>Категория: {{ expense.get_category }}</p>
+                                <p>Сумма: {{ expense.amount|intcomma }}₽</p>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <form action="{% url 'app:expense_edit' expense.id %}" method="get">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">Изменить</button>
+                                    </form>
+                                    <form action="{% url 'app:expense_delete' expense.id %}" method="get">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                                    </form>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">(пока не было трат)</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapseExpenses" aria-expanded="true" aria-controls="collapseExpenses">
+                            <i class="fa fa-sort" aria-hidden="true"></i>  
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="incomes mb-4">
+        <h4>Ваши зачисления за последние 30 дней:</h4>
+        <form action="{% url 'app:income_add' %}" method="get">
+            <button type="submit" class="btn btn-outline-success">Добавить доход</button>
+        </form>
+        <div class="accordion" id="accordionIncomes">
+            <div class="card">
+                <div class="card-header" id="headingIncomes">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#collapseIncomes" aria-expanded="true" aria-controls="collapseIncomes">
+                            Показать все доходы
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseIncomes" class="collapse" aria-labelledby="headingIncomes" data-parent="#accordionIncomes">
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for income in incomes %}
+                            <li class="list-group-item">
+                                <h6>{{ income.title }}</h6>
+                                <p>Сумма: {{ income.amount|intcomma }}₽</p>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <form action="{% url 'app:income_edit' income.id %}" method="get">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">Изменить</button>
+                                    </form>
+                                    <form action="{% url 'app:income_delete' income.id %}" method="get">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                                    </form>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">(пока не было зачислений)</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapseIncomes" aria-expanded="true" aria-controls="collapseIncomes">
+                            <i class="fa fa-sort" aria-hidden="true"></i>  
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="transactions mt-4">
+        <h3 class="text-center">Все ваши транзакции:</h3>
+    
+        <div class="card mb-3">
+            <div class="card-header">Фильтры</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <label for="transactionType" class="form-label">Тип транзакции:</label>
+                        <select class="form-select" id="transactionType">
+                            <option value="">Все</option>
+                            <option value="Доход">Доход</option>
+                            <option value="Расход">Расход</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="category" class="form-label">Категория:<br><small>для поиска доходов выберите "все"</small></label>
+                        <select class="form-select" id="category">
+                            <option value="">Все</option>
+                            <option value="Супермаркеты">Супермаркеты</option>
+                            <option value="Рестораны и кафе">Рестораны и кафе</option>
+                            <option value="Здоровье и красота">Здоровье и красота</option>
+                            <option value="Одежда и аксессуары">Одежда и аксессуары</option>
+                            <option value="Коммунальные услуги, связь, интернет">Коммунальные услуги, связь, интернет</option>
+                            <option value="Транспорт">Транспорт</option>
+                            <option value="машина">машина</option>
+                            <option value="Образование">Образование</option>
+                            <option value="Отдых и развлечения">Отдых и развлечения</option>
+                            <option value="Кредит/Ипотека">Кредит/Ипотека</option>
+                            <option value="Товары для дома">Товары для дома</option>
+                            <option value="Прочие расходы">Прочие расходы</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <label for="sortOrder" class="form-label">Сортировка по:</label>
+                        <select class="form-select" id="sortOrder">
+                            <option value="date">По времени</option>
+                            <option value="amount">По сумме</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="sortDirection" class="form-label">Порядок:</label>
+                        <select class="form-select" id="sortDirection">
+                            <option value="ascending">По возрастанию</option>
+                            <option value="descending">По убыванию</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="table-responsive">
+            <table class="table table-bordered mt-3" id="transactionsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Тип</th>
+                        <th>Название</th>
+                        <th>Категория</th>
+                        <th>Сумма (₽)</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr class="{% if transaction.get_verbose_name == 'Доход' %}table-success{% elif transaction.get_verbose_name == 'Расход' %}table-danger{% endif %}">
+                        <td>{{ transaction.get_verbose_name }}</td>
+                        <td>{{ transaction.title }}</td>
+                        <td>{{ transaction.get_category }}</td>
+                        <td>{{ transaction.amount|intcomma }}₽</td>
+                        <td>{{ transaction.date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">(пока нет транзакций)</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const transactionTypeSelect = document.getElementById('transactionType');
+            const categorySelect = document.getElementById('category');
+            const sortOrderSelect = document.getElementById('sortOrder');
+            const sortDirectionSelect = document.getElementById('sortDirection');
+            const rows = Array.from(document.querySelectorAll('#transactionsTable tbody tr'));
+    
+            function filterTransactions() {
+                const selectedType = transactionTypeSelect.value;
+                const selectedCategory = categorySelect.value;
+    
+                let filteredRows = rows.filter(row => {
+                    const typeCell = row.cells[0].textContent;
+                    const categoryCell = row.cells[2].textContent;
+    
+                    const typeMatch = selectedType === '' || typeCell === selectedType;
+                    const categoryMatch = selectedCategory === '' || categoryCell === selectedCategory;
+    
+                    return typeMatch && categoryMatch;
+                });
+    
+                const sortOrder = sortOrderSelect.value;
+                const sortDirection = sortDirectionSelect.value;
+                const multiplier = sortDirection === 'ascending' ? 1 : -1;
+    
+                if (sortOrder === 'date') {
+                    filteredRows.sort((a, b) => {
+                        const dateA = parseDate(a.cells[4].textContent);
+                        const dateB = parseDate(b.cells[4].textContent);
+                        return (dateA - dateB) * multiplier;
+                    });
+                } else if (sortOrder === 'amount') {
+                    filteredRows.sort((a, b) => {
+                        const amountA = parseFloat(a.cells[3].textContent.replace('₽', '').replace(/\s/g, ''));
+                        const amountB = parseFloat(b.cells[3].textContent.replace('₽', '').replace(/\s/g, ''));
+                        return (amountA - amountB) * multiplier;
+                    });
+                }
+    
+                const tbody = document.querySelector('#transactionsTable tbody');
+                tbody.innerHTML = '';
+    
+                filteredRows.forEach(row => {
+                    tbody.appendChild(row);
+                });
+            }
+    
+            function parseDate(dateString) {
+                const monthNames = {
+                    'января': 'January', 'февраля': 'February', 'марта': 'March', 
+                    'апреля': 'April', 'мая': 'May', 'июня': 'June', 
+                    'июля': 'July', 'августа': 'August', 'сентября': 'September', 
+                    'октября': 'October', 'ноября': 'November', 'декабря': 'December'
+                };
+    
+                const parts = dateString.replace(' г.', '').split(' ');
+                const day = parseInt(parts[0], 10);
+                const month = monthNames[parts[1]];
+                const year = parts[2];
+                const time = parts.slice(3).join(' ');
+    
+                const formattedDateString = `${month} ${day}, ${year} ${time}`;
+                return new Date(formattedDateString);
+            }
+    
+            transactionTypeSelect.addEventListener('change', filterTransactions);
+            categorySelect.addEventListener('change', filterTransactions);
+            sortOrderSelect.addEventListener('change', filterTransactions);
+            sortDirectionSelect.addEventListener('change', filterTransactions);
+    
+            filterTransactions(); 
+        });
+    </script>
+    
+    <div class="text-center mt-4">
+        <small><a href="https://www.cbr-xml-daily.ru/">(API для курсов ЦБ РФ)</a></small>
+    </div>
+</div>
+
+{% endblock %}

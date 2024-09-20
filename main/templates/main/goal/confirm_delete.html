@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление цели{% endblock %}
+
+{% block content %}
+  <div class="container my-5">
+    <h1 class="mb-4">Удаление цели</h1>
+    <form action="{% url 'app:goal_delete' goal.id %}" method="post" class="form-group">
+      {% csrf_token %}
+        <button type="submit" class="btn btn-danger">удалить</button>
+        <a href="{% url 'app:index' %}" class="btn btn-secondary">отмена</a>
+    </form>
+  </div>
+{% endblock %}

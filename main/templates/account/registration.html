@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">Регистрация</h1>
+    <div class="card">
+        <p class="card-text text-center">Введите данные для регистрации</p>
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Ваше имя:</label>
+                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default_if_none:'' }}">
+                {% if form.username.errors %}
+                    <div class="text-danger">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default_if_none:'' }}">
+                {% if form.email.errors %}
+                    <div class="text-danger">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="password1" class="form-label">Пароль:</label>
+                <input type="password" name="password1" id="id_password1" class="form-control">
+                {% if form.password1.errors %}
+                    <div class="text-danger">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="password2" class="form-label">Подтвердите пароль:</label>
+                <input type="password" name="password2" id="id_password2" class="form-control">
+                {% if form.password2.errors %}
+                    <div class="text-danger">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+            <input type="submit" class="btn btn-primary w-100" value="Зарегистрироваться">
+        </form>
+    </div>
+{% endblock %}
