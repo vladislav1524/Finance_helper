@@ -14,41 +14,11 @@ Also on the site you can get advice from the neural network based on your expens
 - *Docker*: Containerization
 
 _______________________________________________________________________________________
-### To run the project, you need to:
-1) Add 'localhost' or your domain of Ngrok (about this is written below) if you use that to the allowed_hosts parameter in `settings.py`. 🛠️
-2) Add a `.env` file with your own variables (add to the directory at the level of `manage.py`) 📂
-3) run in main directory at the level of `manage.py`:
-```plaintext
-docker-compose up --build -d
-```
- and run 
-```plaintext
-docker-compose exec web python manage.py migrate
-```
- to stop docker container run:
- ```plaintext
- docker-compose down
-```
-4) to create superuser run:
- ```plaintext
- docker-compose exec web python manage.py createsuperuser
-```
-### if you want to test authentication via social networks 🌐, then you need to perform the steps below :
-1) you need to install Ngrok to use your computer as a server and distribute the site with https. [Link to Ngrok](https://ngrok.com/)
-2) Then in console of Ngrok run
-```plaintext
- ngrok http 8000
- ```
-or
-```plaintext
- ngrok config add-authtoken <your_authtoken>
- ```
- to use a single domain when each time you start listening to the port (authtoken can be obtained on the website in the profile)
- 
-3) add your domain of Ngrok to CSRF_TRUSTED_ORIGINS and ALLOWED_HOSTS and run docker container
-_______________________________________________________________________________________
-what does .env 📄 looks like 
-(without spaces and buckets):
+## How to launch a project 🛠️:
+1. Add `localhost` or your Ngrok domain to the `ALLOWED_HOSTS` parameter in the file `settings.py `.
+2. Create a `.env` file with your variables (add it to the directory, at the `manage.py `).
+
+what does .env 📄 looks like (without spaces and buckets)::
 ```plaintext
 SECRET_KEY=...
 DATABASE_NAME=...
@@ -70,3 +40,40 @@ DEBUG=False
 ALLOWED_HOSTS=127.0.0.1,localhost # and your Ngrok domain
 CSRF_TRUSTED_ORIGINS=127.0.0.1,localhost # and your Ngrok domain
 ```
+3. Run in the main directory at the `manage.py `:
+```bash
+docker-compose up --build
+```
+Then run:
+```bash
+docker-compose exec web python manage.py migrate
+```
+To create a superuser:
+
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+## If you want to test authentication via social networks 🌐:
+1. Install Ngrok to use your computer as a server and publish the site with HTTPS. [Link to Ngrok](https://ngrok.com/)
+
+2. In the Ngrok console, run:
+```bash
+ngrok http 8000
+```
+Or get a free domain in your personal account and do the following:
+```bash
+ngrok http --hostname=<your host> 8000  
+```
+3. Create and configure applications to log in via social networks, add data to .env:
+
+Vk: https://dev.vk.com/ru
+
+discord: https://discord.com/developers/applications
+
+google: https://console.cloud.google.com/cloud-resource-manager
+
+4. Add your Ngrok domain to CSRF_TRUSTED_ORIGINS and ALLOWED_HOSTS and run the container:
+```bash
+   docker-compose up --build
+```
+_______________________________________________________________________________________
