@@ -2,7 +2,7 @@
 
 ### Project description 📊:
 This is a website for financial accounting assistance that will help you visualize your income and expenses, set a goal for accumulation that depends on your income and expenses.
-Also on the site you can get advice from the neural network based on your expenses, income and goals.
+Also on the site you can get advice from the ai based on your expenses, income and goals.
 
 ### Technologies used in the project:
 - *Redis*: Caching of page elements to reduce queries to the database and to the exchange rate API.
